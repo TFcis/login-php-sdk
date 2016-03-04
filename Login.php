@@ -2,8 +2,13 @@
 
 class login_system{
 	
-	static $url = "http://www.tfcis.org/login/";
+	static $url;
 	
+	function __construct(){
+		require("config.php");
+		self::$url = $config["url"];
+	}
+
 	public static function status(){
 		@session_start();
 		if(@$_GET["logout"]==true){
