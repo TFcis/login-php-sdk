@@ -1,5 +1,6 @@
 <?php
 
-$config["url"] = "http://www.tfcis.org/login/";
+$config["site_url"] = "http://www.tfcis.org/";
+$config["login_url"] = "http://www.tfcis.org/login/";
 
 ?>

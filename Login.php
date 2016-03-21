@@ -2,23 +2,25 @@
 
 class login_system{
 	
-	static $url;
+	static $login_url;
+	static $current_url;
 	
 	function __construct(){
 		require("config.php");
-		self::$url = $config["url"];
+		self::$login_url = $config["login_url"];
+		self::$current_url = "http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
 	}
 
 	public static function status(){
 		@session_start();
 		if(@$_GET["logout"]==true){
 			unset($_SESSION["user"]);
-			header("Location:".self::geturl("logout"));
+			header("Location:".self::getlogouturl($_GET["continue"]));
 		}else if(isset($_SESSION["user"])){
 			return (object)array( "login"=>true, "data"=>$_SESSION["user"], "url"=>"http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?logout=true" );
 		}else if(isset($_GET["cookie"])){
 			$cookie = $_GET["cookie"];
-			$data = file_get_contents(self::$url."api/user.php?cookie=".$cookie);
+			$data = file_get_contents(self::$login_url."api/user.php?cookie=".$cookie);
 			$data = json_decode($data);
 			if($data->status === "success"){
 				$_SESSION["user"] = $data->result;
@@ -33,12 +35,12 @@ class login_system{
 				throw new exception("Unexpected API result");
 			}
 		}else{
-			return (object)array( "login"=>false, "data"=>null, "url"=>self::geturl("login") );;
+			return (object)array( "login"=>false, "data"=>null, "url"=>self::getloginurl(self::$current_url) );;
 		}
 	}
 
 	public static function getinfobyaccount($uid){
-		$data = file_get_contents(self::$url."api/getinfo.php?account=".$uid);
+		$data = file_get_contents(self::$login_url."api/getinfo.php?account=".$uid);
 		$data = json_decode($data);
 		if($data->status === "success"){
 			return $data->result;
@@ -54,7 +56,7 @@ class login_system{
 	}
 
 	public static function getinfobyid($uid){
-		$data = file_get_contents(self::$url."api/getinfo.php?uid=".$uid);
+		$data = file_get_contents(self::$login_url."api/getinfo.php?uid=".$uid);
 		$data = json_decode($data);
 		if($data->status === "success"){
 			return $data->result;
@@ -68,10 +70,21 @@ class login_system{
 			throw new exception("Unexpected API result");
 		}
 	}
-	
-	private static function geturl($page){
-		$current_url = "http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
-		return self::$url . "$page.php?continue=" . urlencode($current_url);
+
+	public static function getloginurl($continue=null){
+		return self::geturl("login", $continue);
+	}
+
+	public static function getlogouturl($continue=null){
+		return self::geturl("logout", $continue);
+	}
+
+	private static function geturl($page, $continue){
+		require("config.php");
+		if (is_null($continue)) {
+			$continue = $config["site_url"];
+		}
+		return self::$login_url . "$page.php?continue=" . urlencode($continue);
 	}
 	
 }
