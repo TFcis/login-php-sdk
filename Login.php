@@ -72,18 +72,15 @@ class login_system{
 	}
 
 	public static function getloginurl($continue=null){
-		return self::geturl("login", $continue);
+		return self::geturl("login", (is_null($continue)?self::$current_url:$continue));
 	}
 
 	public static function getlogouturl($continue=null){
-		return self::geturl("logout", $continue);
+		require("config.php");
+		return self::geturl("login", (is_null($continue)?self::$config["site_url"]:$continue));
 	}
 
 	private static function geturl($page, $continue){
-		require("config.php");
-		if (is_null($continue)) {
-			$continue = $config["site_url"];
-		}
 		return self::$login_url . "$page.php?continue=" . urlencode($continue);
 	}
 	
