@@ -3,11 +3,13 @@
 class login_system{
 	
 	static $login_url;
+	static $site_url;
 	static $current_url;
 	
 	function __construct(){
 		require("config.php");
 		self::$login_url = $config["login_url"];
+		self::$site_url = $config["site_url"];
 		self::$current_url = "http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
 	}
 
@@ -76,8 +78,7 @@ class login_system{
 	}
 
 	public static function getlogouturl($continue=null){
-		require("config.php");
-		return self::geturl("login", (is_null($continue)?self::$config["site_url"]:$continue));
+		return self::geturl("login", (is_null($continue)?self::$site_url:$continue));
 	}
 
 	private static function geturl($page, $continue){
