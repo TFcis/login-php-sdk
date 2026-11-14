@@ -2,14 +2,18 @@
 
 class login_system{
 	
+	const DEFAULT_USER_AGENT = "TFcis-login-php-sdk";
+
 	static $login_url;
 	static $site_url;
 	static $current_url;
+	static $user_agent;
 	
 	function __construct(){
 		require("config.php");
 		self::$login_url = $config["login_url"];
 		self::$site_url = $config["site_url"];
+		self::$user_agent = empty($config["user_agent"]) ? self::DEFAULT_USER_AGENT : $config["user_agent"];
 		self::$current_url = "http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
 	}
 
@@ -22,7 +26,7 @@ class login_system{
 			return (object)array( "login"=>true, "data"=>$_SESSION["user"], "url"=>"http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?logout=true" );
 		}else if(isset($_GET["cookie"])){
 			$cookie = $_GET["cookie"];
-			$data = file_get_contents(self::$login_url."api/user.php?cookie=".$cookie);
+			$data = self::fetch(self::$login_url."api/user.php?cookie=".$cookie);
 			$data = json_decode($data);
 			if($data->status === "success"){
 				$_SESSION["user"] = $data->result;
@@ -42,7 +46,7 @@ class login_system{
 	}
 
 	public static function getinfobyaccount($uid){
-		$data = file_get_contents(self::$login_url."api/getinfo.php?account=".$uid);
+		$data = self::fetch(self::$login_url."api/getinfo.php?account=".$uid);
 		$data = json_decode($data);
 		if($data->status === "success"){
 			return $data->result;
@@ -58,7 +62,7 @@ class login_system{
 	}
 
 	public static function getinfobyid($uid){
-		$data = file_get_contents(self::$login_url."api/getinfo.php?uid=".$uid);
+		$data = self::fetch(self::$login_url."api/getinfo.php?uid=".$uid);
 		$data = json_decode($data);
 		if($data->status === "success"){
 			return $data->result;
@@ -79,6 +83,13 @@ class login_system{
 
 	public static function getlogouturl($continue=null){
 		return self::geturl("login", (is_null($continue)?self::$site_url:$continue));
+	}
+
+	private static function fetch($url){
+		$context = stream_context_create(array(
+			"http" => array( "header" => "User-Agent: ".self::$user_agent."\r\n" ),
+		));
+		return file_get_contents($url, false, $context);
 	}
 
 	private static function geturl($page, $continue){
